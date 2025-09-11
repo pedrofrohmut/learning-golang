@@ -38,4 +38,14 @@ func fn003() {
 
     var cv9 = fmt.Sprintf("%f", 3.14)
     fmt.Println(cv9, reflect.TypeOf(cv9))
+
+    // %d - Integer with leading zeros %04d, leading spaces %4d
+    // %c - Char
+    // %f - Float with leading zeros %04f, 2 after the point %.2f or two together %04.2f, no decimals %.f
+    // %t - Boolean
+    // %s - String
+    // %o - Base 8
+    // %x - Base 16
+    // %v - Guesses based on data type
+    // %T - Type of supplied value
 }

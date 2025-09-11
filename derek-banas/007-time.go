@@ -5,7 +5,7 @@ import (
     "fmt"
 )
 
-func main() {
+func Fn007() {
     var now = time.Now()
 
     var isodate = fmt.Sprintf("%d-%02d-%dT%d.%d.%d.%dZ",
