@@ -5,7 +5,7 @@ import (
     "reflect"
 )
 
-func main() {
+func Fn011() {
     var arr1 = make([]string, 5)
     arr1[0] = "Society"
     arr1[1] = "of"
