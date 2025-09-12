@@ -26,7 +26,7 @@ func getArrayAvarage(nums ...float64) float64 {
     return sum / float64(len(nums))
 }
 
-func main() {
+func Fn013() {
     var n int = 10
 
     fmt.Printf("Value of n before changeVal: %d\n", n)
