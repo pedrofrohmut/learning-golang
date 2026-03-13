@@ -1,17 +1,22 @@
 package products
 
-import "context"
+import (
+	"context"
+	repo "ecommerce/internal/adapters/sqlc"
+)
 
 type Service interface {
-	ListProducts(ctx context.Context) error
+	ListProducts(ctx context.Context) ([]repo.Product, error)
 }
 
-type Svc struct {}
-
-func NewSvc() *Svc {
-	return &Svc {}
+type Svc struct {
+	repo repo.Querier
 }
 
-func (this *Svc) ListProducts(ctx context.Context) error {
-	return nil
+func NewSvc(repo repo.Querier) *Svc {
+	return &Svc { repo: repo }
+}
+
+func (this *Svc) ListProducts(ctx context.Context) ([]repo.Product, error) {
+	return this.repo.ListProducts(ctx)
 }

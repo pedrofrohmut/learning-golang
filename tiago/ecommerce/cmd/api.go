@@ -1,12 +1,14 @@
 package main
 
 import (
+	repo "ecommerce/internal/adapters/sqlc"
 	"ecommerce/internal/products"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5"
 )
 
 type DbConfig struct {
@@ -20,10 +22,11 @@ type Config struct {
 
 type Application struct {
 	config Config
+	db *pgx.Conn
 }
 
 // Mount
-func (app *Application) mount() http.Handler {
+func (this *Application) mount() http.Handler {
 	var router = chi.NewRouter()
 
 	// A good base middleware stack
@@ -41,7 +44,8 @@ func (app *Application) mount() http.Handler {
 		writer.Write([]byte("Server is on."))
 	})
 
-	var productsService = products.NewSvc()
+	var repo = repo.New(this.db)
+	var productsService = products.NewSvc(repo)
 	var productsHandler = products.NewHandler(productsService)
 	router.Get("/products", productsHandler.ListProducts)
 

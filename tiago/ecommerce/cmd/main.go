@@ -30,6 +30,7 @@ func main() {
 
 	var app = Application {
 		config: config,
+		db: conn,
 	}
 
 	var handler = app.mount()
