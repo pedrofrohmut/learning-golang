@@ -2,6 +2,7 @@ package main
 
 import (
 	repo "ecommerce/internal/adapters/sqlc"
+	"ecommerce/internal/orders"
 	"ecommerce/internal/products"
 	"net/http"
 	"time"
@@ -45,9 +46,14 @@ func (this *Application) mount() http.Handler {
 	})
 
 	var repo = repo.New(this.db)
+
 	var productsService = products.NewSvc(repo)
 	var productsHandler = products.NewHandler(productsService)
 	router.Get("/products", productsHandler.ListProducts)
+
+	var orderService = orders.NewService(repo, this.db)
+	var ordersHandler = orders.NewHandler(orderService)
+	router.Post("/orders", ordersHandler.PlaceOrder)
 
 	return router
 }
