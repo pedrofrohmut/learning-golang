@@ -1,15 +1,10 @@
 package models
 
 import (
-	"crypto/sha1"
 	"time"
-
+	"github.com/teris-io/shortid"
 	"gorm.io/gorm"
 )
-
-// var (
-// 	OrderStatus = []string { "Order placed", "Preparing", "Baking", "Quality check", "Ready" }
-// )
 
 type OrderStatus string
 
@@ -20,6 +15,14 @@ const (
 	QualityCheck OrderStatus = "Quality check"
 	Ready OrderStatus = "Ready"
 )
+
+var OrderStatusStr = []string {
+	string(OrderPlaced),
+	string(Preparing),
+	string(Baking),
+	string(QualityCheck),
+	string(Ready),
+}
 
 type PizzaType string
 
@@ -36,6 +39,19 @@ const (
 	FourCheese PizzaType = "FourCheese"
 )
 
+var PizzaTypesStr = []string {
+	string(Margheritta),
+	string(Pepperoni),
+	string(Vegetarian),
+	string(Hawaiian),
+	string(BbqChicken),
+	string(MeatLovers),
+	string(BuffaloChicken),
+	string(Supreme),
+	string(TruffleMushroom),
+	string(FourCheese),
+}
+
 type PizzaSize string
 
 const (
@@ -44,6 +60,13 @@ const (
 	Large PizzaSize = "Large"
 	XLarge PizzaSize = "XLarge"
 )
+
+var PizzaSizesStr = []string {
+	string(Small),
+	string(Medium),
+	string(Large),
+	string(XLarge),
+}
 
 type OrderModel struct {
 	DB *gorm.DB
@@ -67,8 +90,28 @@ type Order struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-func (this *Order) BeforeCreate(tx *gorm.DB) {
+func (this *Order) BeforeCreate(tx *gorm.DB) error {
 	if this.Id == "" {
-		this.Id = shortid.
+		this.Id = shortid.MustGenerate()
 	}
+
+	return nil
+}
+
+func (this *OrderItem) BeforeCreate(tx *gorm.DB) error {
+	if this.Id == "" {
+		this.Id = shortid.MustGenerate()
+	}
+
+	return nil
+}
+
+func (this *OrderModel) CreateOrder(order *Order) error {
+	return this.DB.Create(order).Error
+}
+
+func (this *OrderModel) GetOrder(id string) (*Order, error) {
+	var order Order
+	var err = this.DB.Preload("Items").First(&order, "id = ?", id).Error
+	return &order, err
 }
