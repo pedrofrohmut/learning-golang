@@ -1,10 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"pizza-shop/internal/models"
+
 	"github.com/gin-gonic/gin"
 )
+
+type CustomerData struct {
+	Title string
+	Order models.Order
+	Status []string
+}
 
 type OrderFormData struct {
 	PizzaTypes []string
@@ -12,16 +20,16 @@ type OrderFormData struct {
 }
 
 type OrderRequest struct {
-	Name string `form:"name" binding:"required, min=2, max=100"`
-	Phone string `form:"phone" binding:"required, min=10, max=20"`
-	Address string `form:"address" binding:"required, min=5, max=200"`
-	Types []string `form:"types" binding:"required, min=1, dive, validate_pizza_type"`
-	Sizes []string `form:"sizes" binding:"required, min=1, dive, validate_pizza_size"`
-	Instructions string `form:"instructions" binding:"max=200"`
+	Name string			  `form:"name" binding:"required,min=2,max=100"`
+	Phone string		  `form:"phone" binding:"required,min=10,max=20"`
+	Address string		  `form:"address" binding:"required,min=5,max=200"`
+	Types []string		  `form:"types" binding:"required,min=1,dive,valid_pizza_type"`
+	Sizes []string		  `form:"sizes" binding:"required,min=1,dive,valid_pizza_size"`
+	Instructions []string `form:"instructions" binding:"max=200"`
 }
 
 func (this *Handler) ServeNewOrderForm(ctx *gin.Context) {
-	ctx.HTML(200, "order.tmpl", OrderFormData {
+	ctx.HTML(200, "order.tmpl", OrderFormData{
 		PizzaTypes: models.PizzaTypesStr,
 		PizzaSizes: models.PizzaSizesStr,
 	})
@@ -35,12 +43,14 @@ func (this *Handler) HandleNewOrderPost(ctx *gin.Context) {
 		return
 	}
 
+	fmt.Printf("Form: %+v; Sizes Length: %d\n", form, len(form.Sizes))
+
 	var orderItems = make([]models.OrderItem, len(form.Sizes))
 	for i := range orderItems {
-		orderItems[i] = models.OrderItem { Size: form.Sizes[i], Type: form.Types[i], Instructions: form.Instructions }
+		orderItems[i] = models.OrderItem{ Size: form.Sizes[i], Type: form.Types[i], Instructions: form.Instructions[i] }
 	}
 
-	var order = models.Order {
+	var order = models.Order{
 		CustomerName: form.Name,
 		Phone: form.Phone,
 		Address: form.Address,
@@ -57,6 +67,8 @@ func (this *Handler) HandleNewOrderPost(ctx *gin.Context) {
 
 	slog.Info("Order created", "orderId", order.Id, "customer", order.CustomerName)
 
+	fmt.Printf("Order: %+v: ", order)
+
 	ctx.Redirect(303, "/customer/" + order.Id)
 }
 
@@ -71,5 +83,9 @@ func (this *Handler) serveCustomer(ctx *gin.Context) {
 		ctx.String(404, "Order not found")
 	}
 
-	ctx.HTML(200, "customer.tmpl", gin.H { "Order": order })
+	ctx.HTML(200, "customer.tmpl", CustomerData {
+		Title: "Pizza order status " + orderId,
+		Order: *order,
+		Status: models.OrderStatusStr,
+	})
 }

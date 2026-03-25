@@ -28,12 +28,17 @@ func main() {
 	// Setup routes and start the server
 	var handler = NewHandler(dbModel)
 	var router = gin.Default()
+
+	RegisterCustomValidators()
+
 	err = loadTemplates(router)
 	if err != nil {
 		slog.Error("Failed to load templates", "error", err)
 		os.Exit(1)
 	}
 	setupRoutes(router, handler)
+
 	slog.Info("Server started", "url", "http://localhost:" + cfg.Port)
+
 	router.Run(":" + cfg.Port)
 }

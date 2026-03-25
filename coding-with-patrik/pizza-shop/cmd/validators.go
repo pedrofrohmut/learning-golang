@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log/slog"
 	"pizza-shop/internal/models"
 
 	"github.com/gin-gonic/gin/binding"
@@ -42,7 +43,10 @@ func pizzaSizeValidator(fieldLevel validator.FieldLevel) bool {
 func RegisterCustomValidators() {
 	var v, ok = binding.Validator.Engine().(*validator.Validate)
 	if ok {
-		v.RegisterValidation("validate_pizza_type", pizzaTypeValidator)
-		v.RegisterValidation("validate_pizza_size", pizzaSizeValidator)
+		v.RegisterValidation("valid_pizza_type", pizzaTypeValidator)
+		v.RegisterValidation("valid_pizza_size", pizzaSizeValidator)
+		slog.Info("Custom Validation Registered")
+	} else {
+		slog.Error("Error to register custom validators")
 	}
 }

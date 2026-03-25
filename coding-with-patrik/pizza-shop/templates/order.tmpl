@@ -57,9 +57,9 @@
       <div class="space-y-4">
         <div>
           <label class="block text-gray-700 text-sm font-medium mb-2">Size</label>
-          <select class="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white" name="size" required>
+          <select class="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white" name="sizes" required>
             {{ range $.PizzaSizes }}
-            <option value="{{.}}">{{.}}</option>
+              <option value="{{.}}">{{.}}</option>
             {{ end }}
           </select>
         </div>
@@ -68,7 +68,7 @@
           <label class="block text-gray-700 text-sm font-medium mb-2">Types</label>
           <select class="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white" name="types" required>
             {{ range $.PizzaTypes }}
-            <option value="{{.}}">{{.}}</option>
+              <option value="{{.}}">{{.}}</option>
             {{ end }}
           </select>
         </div>
@@ -82,12 +82,22 @@
   </template>
 
   <script>
+   const pizzaTemplate = document.getElementById("pizzaTemplate")
+   const pizzas = document.getElementById("pizzas")
    let pizzaCount = 0
 
    function addPizza() {
-     const clone = document.getElementById("pizzaTemplate").content.cloneNode(true)
+     const clone = pizzaTemplate.content.cloneNode(true)
+     if (!clone) {
+       console.log("Could not get the clone for the pizza template")
+       return
+     }
      clone.querySelector(".pizza-number").textContent = ++pizzaCount
-     document.getElementById("pizza").appendChild(clone)
+     if (!pizzas) {
+       console.log("Pizzas container not found")
+       return
+     }
+     pizzas.appendChild(clone)
    }
 
    function removePizza(btn) {
