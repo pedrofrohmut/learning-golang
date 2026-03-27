@@ -8,37 +8,44 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	// Logger
+func setupLogger() {
 	var logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
+}
 
-	slog.Info("Start working")
-
-	var cfg = loadConfig()
-
-	// Database connection
+func initDb(cfg Config) *models.DbModel {
 	var dbModel, err = models.InitDb(cfg.DbPath)
 	if err != nil {
 		slog.Error("Failed to initialize the database connection", "error", err)
 		os.Exit(1)
 	}
 	slog.Info("Database initialized successfully")
+	return dbModel
+}
 
-	// Setup routes and start the server
+func setupRouterAndRoutes(dbModel *models.DbModel, cfg Config) *gin.Engine {
 	var handler = NewHandler(dbModel)
 	var router = gin.Default()
-
 	RegisterCustomValidators()
-
-	err = loadTemplates(router)
+	var err = loadTemplates(router)
 	if err != nil {
 		slog.Error("Failed to load templates", "error", err)
 		os.Exit(1)
 	}
-	setupRoutes(router, handler)
+	var store = setupSessionStore(dbModel.DB, []byte(cfg.SessionSecretKey))
+	setupRoutes(router, handler, store)
+	return router
+}
 
+func startServer(cfg Config, router *gin.Engine) {
 	slog.Info("Server started", "url", "http://localhost:" + cfg.Port)
-
 	router.Run(":" + cfg.Port)
+}
+
+func main() {
+	setupLogger()
+	var cfg = loadConfig()
+	var dbModel = initDb(cfg)
+	var router = setupRouterAndRoutes(dbModel, cfg)
+	startServer(cfg, router)
 }

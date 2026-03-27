@@ -9,20 +9,26 @@ import (
 
 type DbModel struct {
 	Order OrderModel
+	User UserModel
+	DB *gorm.DB
 }
 
 func InitDb(dataSourceName string) (*DbModel, error) {
-	var db, err = gorm.Open(sqlite.Open(dataSourceName), &gorm.Config {})
+	var db, err = gorm.Open(sqlite.Open(dataSourceName), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to migrate database: %v", err)
 	}
 
-	err = db.AutoMigrate(&Order {}, &OrderItem {})
+	err = db.AutoMigrate(&Order{}, &OrderItem{}, &User{})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to migrate database: %v", err)
 	}
 
-	var dbModel = &DbModel { Order: OrderModel { DB: db } }
+	var dbModel = &DbModel{
+		Order: OrderModel{ DB: db },
+		User: UserModel{ DB: db },
+		DB: db,
+	}
 
 	return  dbModel, nil
 }
