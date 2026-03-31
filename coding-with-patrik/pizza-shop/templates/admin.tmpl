@@ -32,6 +32,8 @@
               <button onclick="location.reload()" class="text-gray-500 hover:text-gray-700 transition-colors ml-2 p-1.5 rounded-lg hover:bg-gray-100">
                 <span class="text-xl">Reload</span>
               </button>
+              <span id="lastFetched" class="text-sm text-gray-500 ml-4 font-medium"></span>
+              <span id="newOrdersBadge" class="ml-2 text-xs font-semibold text-white bg-red-500 rounded-full px-3 py-1.5 hidden shadow-sm">0 new orders</span>
             </div>
 
             <div class="w-full overflow-x-auto rounded-xl border border-gray-200">
@@ -60,11 +62,13 @@
                     <td class="px-6 py-4 text-sm text-gray-700">
                       <div class="space-y-1">
                         {{ range $index, $pizza := .Items }}
-                          <span class="text-gray-400">#{{ add $index 1 }}</span>
-                          <span class="truncate">{{ $pizza.Size }} {{ $pizza.Type }}</span>
-                          {{ if $pizza.Instructions }}
-                            <span class="size-4 text-gray-400 cursor-help" title="{{ $pizza.Instructions }}">?</span>
-                          {{ end }}
+                          <div class="flex items-center gap-2">
+                            <span class="text-gray-400">#{{ add $index 1 }}</span>
+                            <span class="truncate"><strong>{{ $pizza.Size }}</strong> {{ $pizza.Type }}</span>
+                            {{ if $pizza.Instructions }}
+                              <span class="size-4 text-gray-400 cursor-help" title="{{ $pizza.Instructions }}">?</span>
+                            {{ end }}
+                          </div>
                         {{ end }}
                       </div>
                     </td>
@@ -72,7 +76,11 @@
                       <div class="flex gap-2">
                         <!-- Update Orders Status Form -->
                         <form action="/admin/order/{{ .Id }}/update" method="post">
-                          <select name="status" class="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white font-medium">
+                          <select
+                            name="status"
+                            onchange="this.form.submit()"
+                            class="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all bg-white font-medium"
+                          >
                             {{ $currentStatus := .Status }}
                             {{ range $.Statuses }}
                               <option {{ if eq . $currentStatus }} selected {{ end }} value="{{ . }}">{{ . }}</option>
@@ -81,7 +89,7 @@
                         </form>
 
                         <form action="/admin/order/{{ .Id }}/delete" method="post">
-                          <button type="submit" class="p-2 text-white bg-red-500 rounded-lg hover:bg-red-600 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all" onclick="() => confirm('Are you sure you want to delete this order?')">X</button>
+                          <button type="submit" class="p-2 text-white bg-red-500 rounded-lg hover:bg-red-600 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-400 transition-all" onclick="return confirm('Are you sure you want to delete this order?')">X</button>
                         </form>
                       </div>
                     </td>
@@ -100,4 +108,36 @@
 
     </div>
   </div>
+  <script>
+   const lastFetched = document.getElementById("lastFetched")
+
+   const updateLastFetched = () => {
+     if (!lastFetched) {
+       console.error("Error: no element for lastFetched text")
+       return
+     }
+     lastFetched.textContent = "Last updated on: " + new Date().toLocaleString()
+   }
+
+   const badgeText = n => (n == 1 ? "1 new order" : n + " new orders")
+
+   document.addEventListener("DOMContentLoaded", () => {
+     updateLastFetched()
+
+     const newOrdersBadge = document.getElementById("newOrdersBadge")
+     let newOrdersCount = 0
+     const eventSrc = new EventSource("/admin/notifications")
+
+     eventSrc.onmessage = () => {
+       newOrdersCount++
+       newOrdersBadge.textContent = badgeText(newOrdersCount)
+       newOrdersBadge.classList.remove("hidden")
+       updateLastFetched()
+     }
+
+     eventSrc.onerror = err => {
+       console.error("EventSource failed: " + err)
+     }
+   })
+  </script>
 {{ template "bottom" . }}

@@ -85,6 +85,8 @@ func (this *Handler) HandleOrderPut(ctx *gin.Context) {
 		return
 	}
 
+	this.notificationManager.Notify("order:" + orderId , "order_updated")
+
 	ctx.Redirect(303, "/admin")
 }
 
