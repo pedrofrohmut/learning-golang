@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"pizza-shop/internal/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +13,8 @@ type LoginData struct {
 
 type AdminDashboardData struct {
 	Username string
+	Orders []models.Order
+	Statuses []string
 }
 
 func (this *Handler) HandleLoginGet(ctx *gin.Context) {
@@ -55,8 +58,45 @@ func (this *Handler) HandleLogout(ctx *gin.Context) {
 }
 
 func (this *Handler) ServeAdminDashboard(ctx *gin.Context) {
+	var orders, err = this.orders.GetAllOrders()
+	if err != nil {
+		ctx.String(500, "Error fetching orders")
+		return
+	}
+
 	var username = GetSessionString(ctx, "username")
 
 	fmt.Printf("Serving page for username: %s\n", username)
-	ctx.HTML(200, "admin.tmpl", AdminDashboardData { Username: username })
+	ctx.HTML(200, "admin.tmpl", AdminDashboardData{
+		Orders: orders,
+		Username: username,
+		Statuses: models.OrderStatusStr,
+	})
+}
+
+func (this *Handler) HandleOrderPut(ctx *gin.Context) {
+	var orderId = ctx.Param("id")
+	var newStatus = ctx.PostForm("status")
+
+	var err = this.orders.UpdateOrderStatus(orderId, newStatus)
+	if err != nil {
+		fmt.Errorf("Error to HandleOrderPut: %s", err)
+		ctx.String(500, err.Error())
+		return
+	}
+
+	ctx.Redirect(303, "/admin")
+}
+
+func (this *Handler) HandleOrderDelete(ctx *gin.Context) {
+	var orderId = ctx.Param("id")
+
+	var err = this.orders.DeleteOrder(orderId)
+	if err != nil {
+		fmt.Errorf("Error to HandleOrderDelete: %s", err)
+		ctx.String(500, err.Error())
+		return
+	}
+
+	ctx.Redirect(303, "/admin")
 }

@@ -115,3 +115,20 @@ func (this *OrderModel) GetOrder(id string) (*Order, error) {
 	var err = this.DB.Preload("Items").First(&order, "id = ?", id).Error
 	return &order, err
 }
+
+func (this *OrderModel) GetAllOrders() ([]Order, error) {
+	var orders []Order
+	var err = this.DB.Preload("Items").Order("created_at desc").Find(&orders).Error
+	if err != nil {
+		return nil, err
+	}
+	return orders, nil
+}
+
+func (this *OrderModel) UpdateOrderStatus(id string, status string) error {
+	return this.DB.Model(&Order{}).Where("id = ?", id).Update("status", status).Error;
+}
+
+func (this *OrderModel) DeleteOrder(id string) error {
+	return this.DB.Select("Items").Where("id = ?", id).Delete(&Order{}).Error
+}
